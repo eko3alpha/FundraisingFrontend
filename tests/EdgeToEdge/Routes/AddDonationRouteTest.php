@@ -159,6 +159,7 @@ class AddDonationRouteTest extends WebRouteTestCase {
 		$this->assertSame( 'en.wikipedia.org', $data['source'] );
 		$this->assertSame( 'N', $donation->getStatus() );
 		$this->assertTrue( $donation->getDonorOptsIntoNewsletter() );
+		$this->assertTrue( $donation->getDonationReceipt() );
 	}
 
 	public function testGivenValidRequest_confirmationPageContainsEnteredData(): void {
@@ -826,4 +827,19 @@ class AddDonationRouteTest extends WebRouteTestCase {
 		$this->assertSame( 0, $crawler->filter( '#donation-payment input[name="zahlweise"][value="SUB"]' )->count() );
 	}
 
+	public function testDonationReceiptOptOut_persistedInDonation(): void {
+		$this->createEnvironment( [], function ( Client $client, FunFunFactory $factory ): void {
+
+			$input = $this->newValidFormInput();
+			$input['donationReceipt'] = '0';
+
+			$client->request(
+				'POST',
+				'/donation/add',
+				$input
+			);
+
+			$this->assertFalse( $this->getDonationFromDatabase( $factory )->getDonationReceipt() );
+		} );
+	}
 }
